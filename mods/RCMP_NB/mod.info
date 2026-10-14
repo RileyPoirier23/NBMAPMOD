@@ -1,0 +1,6 @@
+name=RCMP New Brunswick (Mounties)
+id=RCMP_NB
+description=Replaces Knox County police with the Royal Canadian Mounted Police: white RCMP cruisers, grey-shirt duty uniforms with the yellow-striped breeches, bullet vests, forage caps, and the red serge dress uniform with the Stetson for special zombies and police station loot. Companion to the New Brunswick map mod but works on any map. Run tools/rcmp/make_rcmp.py against your Project Zomboid install to generate the textures and clothing files.
+poster=poster.png
+url=https://github.com/RileyPoirier23/nbmapmod
+versionMin=41.78
