@@ -59,10 +59,22 @@ pipeline offline on a synthetic town.
 
 ### What still needs a human
 
-* **Interiors.** Generated buildings are correct shells with rooms, doors, windows, stairs and a
-  flat roof, but no furniture (furniture is where loot containers live). Open any
-  `build/buildings/*.tbx` in BuildingEd, furnish it, and rebuild lots. `tools/nbmap/data/furniture.json`
-  is the hook for an auto-furnishing library once you have verified tile names in BuildingEd.
+* **Interiors are furnished automatically once you give the generator a furniture library.**
+  Furniture is where loot containers live, so this matters. Harvest the library from your own
+  tools so every tile name is one BuildingEd already knows:
+
+  ```bash
+  cd tools
+  python -m nbmap furniture --tilezed "C:/path/to/TileZed"      # reads TileZed's BuildingFurniture.txt palette
+  python -m nbmap furniture --tbx "C:/path/to/some/buildings"   # or learn from any existing .tbx buildings
+  python -m nbmap build --skip-render                           # rebuilds every .tbx with furniture
+  ```
+
+  The placement rules in `tools/nbmap/furnish.py` put beds, wardrobes, fridges, stoves, counters
+  and sinks, toilets and baths, sofas and TVs, desks and filing cabinets, store shelves and
+  registers, pews, lockers, gun cabinets and so on against the right walls, keep doorways and
+  stairs clear, and match furniture to each room by its vanilla room type (bedroom, kitchen,
+  grocery, pharmacy, policestorage, ...). Without a library the buildings are empty shells.
 * **Roof shapes, rails, bridge decks, power lines** need TileZed objects; the generator marks
   the ground for them.
 * **Tile names.** `tools/nbmap/data/Rules.txt` and `data/themes.json` use vanilla B41 tile

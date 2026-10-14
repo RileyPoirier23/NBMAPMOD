@@ -26,7 +26,7 @@ from shapely.geometry import Polygon
 from shapely.ops import nearest_points
 from shapely.strtree import STRtree
 
-from . import config
+from . import config, furnish
 from .config import CELL
 from .osm import Feature, OSMData, lines, polygons
 
@@ -295,6 +295,21 @@ class TbxWriter:
                 stair = (x0 + 1, y0 + 1, "N")      # occupies (x, y..y+2)
 
         rooms_txt = "\n".join(",".join(str(v) for v in row) + "," for row in rooms.tolist())
+        furn = furnish.Furnisher(self.furniture, rng) if self.furniture else None
+        floors_furniture: list[list[tuple[int, int, str, int]]] = []
+        for level in range(b.levels):
+            objs: list[tuple[int, int, str, int]] = []
+            if furn:
+                blocked = set()
+                if stair:
+                    sx, sy, sd = stair
+                    blocked |= {(sx + i, sy) for i in range(4)} if sd == "W" else {(sx, sy + i) for i in range(4)}
+                for i, name in zip(ids, room_names):
+                    objs += furn.furnish_room(rooms, i, name, blocked, doors_xy)
+            floors_furniture.append(objs)
+        if furn and furn.catalog:
+            insert_at = len(out)
+            out[insert_at:insert_at] = furn.xml()
         for level in range(b.levels):
             out.append('    <floor>')
             out.append('        <rooms>')
@@ -309,6 +324,8 @@ class TbxWriter:
             if stair and level < b.levels - 1:
                 sx, sy, sd = stair
                 out.append(f'        <object type="stairs" x="{sx}" y="{sy}" dir="{sd}" Tile="{stairs}"/>')
+            for x, y, orient, idx in floors_furniture[level]:
+                out.append(f'        <object type="furniture" x="{x}" y="{y}" orient="{orient}" FurnitureTiles="{idx}"/>')
             if level == b.levels - 1:
                 out.append(f'        <object type="roof" x="0" y="0" width="{w - 1}" height="{h - 1}" RoofType="FlatTop" Depth="Zero" '
                            f'cappedW="true" cappedN="true" cappedE="true" cappedS="true" CapTiles="0" SlopeTiles="0" TopTiles="{rooftop}"/>')
@@ -320,7 +337,8 @@ class TbxWriter:
 def generate(data: OSMData, out: Path) -> list[Building]:
     rng = random.Random(config.BUILDINGS["seed"])
     themes = load_themes()
-    furniture = json.loads((DATA / "furniture.json").read_text())
+    furniture = furnish.load()
+    print(f"[buildings] furniture library: {sum(len(v) for v in furniture.get('groups', {}).values())} pieces" if furniture else "[buildings] no furniture library (run `python -m nbmap furniture`), building empty shells")
     writer = TbxWriter(themes, furniture)
     road_feats = [f for f in data.features if f.tag("highway") in config.ROADS and f.geom.geom_type != "Point"]
     road_geoms = [f.geom for f in road_feats]

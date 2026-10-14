@@ -3,6 +3,7 @@
   fetch     download OSM data for every area (needs internet)
   build     render terrain, buildings, zones, worldmap and the WorldEd project
   all       fetch + build
+  furniture harvest a furniture library from TileZed (--tilezed DIR) or existing .tbx files (--tbx DIR)
 """
 from __future__ import annotations
 
@@ -63,6 +64,10 @@ def main(argv: list[str] | None = None) -> None:
         fetch_osm.main(rest)
     elif cmd == "build":
         build(rest)
+    elif cmd == "furniture":
+        from . import furnish
+
+        furnish.main(rest)
     elif cmd == "all":
         from . import fetch_osm
 
