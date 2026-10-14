@@ -1,0 +1,37 @@
+{
+  "_comment": "Where make_rcmp.py composites decals onto recoloured textures. Regions are fractions of the texture (x, y, w, h); 'rotate' in degrees. Run make_rcmp.py --preview-layout to get <texture>_layout.png with a labelled grid, then move these boxes onto the right panels (doors, hood, trunk, legs...). Vehicle atlases differ per model, so entries are matched by substring of the texture file name.",
+  "textures": [
+    {"match": "police", "kind": "vehicle", "decals": [
+      {"decal": "RCMP_Stripe",   "region": [0.00, 0.42, 1.00, 0.08], "tile_x": true},
+      {"decal": "RCMP_Wordmark", "region": [0.05, 0.30, 0.22, 0.09]},
+      {"decal": "RCMP_Wordmark", "region": [0.55, 0.30, 0.22, 0.09]},
+      {"decal": "RCMP_Police",   "region": [0.30, 0.60, 0.20, 0.08]},
+      {"decal": "RCMP_Roundel",  "region": [0.08, 0.52, 0.07, 0.07]},
+      {"decal": "RCMP_Roundel",  "region": [0.58, 0.52, 0.07, 0.07]}
+    ]},
+    {"match": "Shirt_RCMPGrey", "kind": "clothing", "decals": [
+      {"decal": "RCMP_ShoulderFlash", "region": [0.05, 0.10, 0.12, 0.06]},
+      {"decal": "RCMP_ShoulderFlash", "region": [0.55, 0.10, 0.12, 0.06]}
+    ]},
+    {"match": "Jacket_RCMPSerge", "kind": "clothing", "decals": [
+      {"decal": "RCMP_ShoulderFlash", "region": [0.05, 0.10, 0.12, 0.06]},
+      {"decal": "RCMP_ShoulderFlash", "region": [0.55, 0.10, 0.12, 0.06]},
+      {"decal": "RCMP_HatBand", "region": [0.00, 0.47, 1.00, 0.03]}
+    ]},
+    {"match": "Trousers_RCMP", "kind": "clothing", "decals": [
+      {"decal": "RCMP_YellowStripe", "region": [0.24, 0.05, 0.02, 0.9], "tile_y": true},
+      {"decal": "RCMP_YellowStripe", "region": [0.74, 0.05, 0.02, 0.9], "tile_y": true}
+    ]},
+    {"match": "Hat_RCMPForage", "kind": "clothing", "decals": [
+      {"decal": "RCMP_HatBand", "region": [0.00, 0.55, 1.00, 0.08], "tile_x": true},
+      {"decal": "RCMP_Badge", "region": [0.45, 0.30, 0.10, 0.10]}
+    ]},
+    {"match": "Hat_RCMPStetson", "kind": "clothing", "decals": [
+      {"decal": "RCMP_HatBand", "region": [0.00, 0.50, 1.00, 0.06], "tile_x": true}
+    ]},
+    {"match": "Vest_BulletRCMP", "kind": "clothing", "decals": [
+      {"decal": "RCMP_Police", "region": [0.30, 0.20, 0.40, 0.12]},
+      {"decal": "RCMP_Police", "region": [0.30, 0.60, 0.40, 0.12]}
+    ]}
+  ]
+}

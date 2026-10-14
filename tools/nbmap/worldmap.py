@@ -79,6 +79,11 @@ def generate(data: OSMData, out: Path) -> Path:
                 _feature(buf, "Polygon", p.exterior.coords, {"landuse": f.tag("landuse"), "name": f.tag("name")})
         elif f.tag("place") and f.geom.geom_type == "Point":
             _feature(buf, "Point", [(f.geom.x, f.geom.y)], {"place": f.tag("place"), "name": f.tag("name")})
+    if (out / "pois.json").exists():
+        for poi in json.loads((out / "pois.json").read_text()):
+            c = tuple(poi["cell"])
+            buf = percell.setdefault(c, [])
+            _feature(buf, "Point", [(poi["x"], poi["y"])], {"poi": poi["kind"], "name": poi["name"], "place": "poi"})
     xml = ['<?xml version="1.0" encoding="UTF-8"?>', '<world version="1.0">']
     for (cx, cy), feats in sorted(percell.items()):
         xml.append(f'    <cell x="{cx}" y="{cy}">')

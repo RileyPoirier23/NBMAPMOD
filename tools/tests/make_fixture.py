@@ -44,7 +44,7 @@ way([(100, 480), (250, 480), (250, 580), (100, 580)], {"natural": "water", "name
 way([(0, 540), (600, 560)], {"waterway": "stream", "name": "Halls Creek"})
 way([(0, 520), (600, 520)], {"railway": "rail", "name": "CN"})
 way([(20, 10), (120, 10), (120, 50), (20, 50)], {"building": "retail", "shop": "supermarket", "name": "Sobeys"}, close=True)
-way([(140, 10), (200, 10), (200, 50), (140, 50)], {"building": "yes", "amenity": "police", "name": "Codiac RCMP"}, close=True)
+way([(140, 10), (200, 10), (200, 50), (140, 50)], {"building": "yes", "amenity": "police", "name": "Codiac Regional RCMP"}, close=True)
 way([(220, 10), (260, 10), (260, 40), (220, 40)], {"building": "commercial", "amenity": "restaurant"}, close=True)
 way([(20, 6), (120, 6), (120, 50), (20, 50)], {"amenity": "parking"}, close=True)
 for i in range(6):

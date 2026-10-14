@@ -20,10 +20,17 @@ from __future__ import annotations
 
 import argparse
 import colorsys
+import json
 import re
 import shutil
+import sys
 import uuid
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import decals as decal_art  # noqa: E402
+
+DECALS_CFG = Path(__file__).resolve().parent / "decals.json"
 
 NS = uuid.UUID("5d2c7f0e-6b8e-4c2a-9c3b-7a1f0e5c9d11")
 
@@ -115,6 +122,60 @@ OUTFITS = {
     "RCMPSerge": ["Jacket_RCMPSerge", "Trousers_RCMP", "Hat_RCMPStetson"],
 }
 
+# --------------------------------------------------------------------------- decals
+
+class Decaler:
+    def __init__(self, decal_dir: Path, preview: bool):
+        from PIL import Image
+
+        self.cfg = json.loads(DECALS_CFG.read_text())["textures"]
+        self.art = {p.stem: Image.open(p).convert("RGBA") for p in decal_dir.glob("*.png")}
+        self.preview = preview
+        self.count = 0
+
+    def apply(self, img, name: str, kind: str):
+        from PIL import Image, ImageDraw
+
+        img = img.convert("RGBA")
+        W, H = img.size
+        for entry in self.cfg:
+            if entry["kind"] != kind or entry["match"].lower() not in name.lower():
+                continue
+            for dc in entry["decals"]:
+                art = self.art.get(dc["decal"])
+                if art is None:
+                    continue
+                fx, fy, fw, fh = dc["region"]
+                x, y, w, h = int(fx * W), int(fy * H), max(1, int(fw * W)), max(1, int(fh * H))
+                layer = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+                if dc.get("tile_x"):
+                    tile = art.resize((max(1, int(art.width * h / art.height)), h))
+                    for tx in range(0, w, tile.width):
+                        layer.alpha_composite(tile, (tx, 0))
+                elif dc.get("tile_y"):
+                    tile = art.resize((w, max(1, int(art.height * w / art.width))))
+                    for ty in range(0, h, tile.height):
+                        layer.alpha_composite(tile, (0, ty))
+                else:
+                    scale = min(w / art.width, h / art.height)
+                    fitted = art.resize((max(1, int(art.width * scale)), max(1, int(art.height * scale))))
+                    layer.alpha_composite(fitted, ((w - fitted.width) // 2, (h - fitted.height) // 2))
+                if dc.get("rotate"):
+                    layer = layer.rotate(dc["rotate"], expand=False)
+                img.alpha_composite(layer, (x, y))
+                self.count += 1
+        if self.preview:
+            d = ImageDraw.Draw(img)
+            step = max(16, W // 16)
+            for gx in range(0, W, step):
+                d.line([(gx, 0), (gx, H)], fill=(255, 0, 255, 120))
+                d.text((gx + 2, 2), f"{gx / W:.2f}", fill=(255, 0, 255, 255))
+            for gy in range(0, H, step):
+                d.line([(0, gy), (W, gy)], fill=(255, 0, 255, 120))
+                d.text((2, gy + 2), f"{gy / H:.2f}", fill=(255, 0, 255, 255))
+        return img
+
+
 # --------------------------------------------------------------------------- vanilla parsing
 
 def find_item_blocks(scripts_dir: Path) -> dict[str, str]:
@@ -155,8 +216,12 @@ def guid(name: str) -> str:
 
 # --------------------------------------------------------------------------- build
 
-def build(pz: Path, out: Path) -> None:
+def build(pz: Path, out: Path, preview: bool = False) -> None:
     from PIL import Image
+
+    decal_dir = out / "media" / "textures" / "Decals"
+    decal_art.build(decal_dir)
+    decaler = Decaler(decal_dir, preview)
 
     media = pz / "media"
     if not media.is_dir():
@@ -180,7 +245,10 @@ def build(pz: Path, out: Path) -> None:
             rel = src.relative_to(textures).with_suffix("").as_posix()
         dst = out / "media" / "textures" / f"{rel}.png"
         dst.parent.mkdir(parents=True, exist_ok=True)
-        _recolor(Image.open(src), vehicle_livery).save(dst)
+        img = decaler.apply(_recolor(Image.open(src), vehicle_livery), dst.stem, "vehicle")
+        img.save(dst)
+        if preview:
+            img.save(dst.with_name(dst.stem + "_layout.png"))
         n += 1
     print(f"[rcmp] {n} police vehicle textures recoloured to RCMP livery")
 
@@ -236,7 +304,10 @@ def build(pz: Path, out: Path) -> None:
             if tsrc:
                 tdst = out / "media" / "textures" / f"{tname}.png"
                 tdst.parent.mkdir(parents=True, exist_ok=True)
-                _recolor(Image.open(tsrc), fn).save(tdst)
+                img = decaler.apply(_recolor(Image.open(tsrc), fn), new_item, "clothing")
+                img.save(tdst)
+                if preview:
+                    img.save(tdst.with_name(tdst.stem + "_layout.png"))
             new_choices.append(tname)
             break   # one texture per RCMP item (uniforms are uniform)
         xml = re.sub(r"\s*<textureChoices>.*?</textureChoices>", "", xml, flags=re.S)
@@ -288,6 +359,7 @@ def build(pz: Path, out: Path) -> None:
     d.text((70, 90), "R C M P", fill=(255, 205, 0))
     d.text((40, 215), "New Brunswick", fill=(255, 255, 255))
     img.save(out / "poster.png")
+    print(f"[rcmp] {decaler.count} decals composited (regions: tools/rcmp/decals.json)")
     print(f"[rcmp] {len(made)} RCMP clothing items, {len(OUTFITS)} outfits -> {out}")
 
 
@@ -295,8 +367,9 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--pz-dir", required=True, help="Project Zomboid install folder (contains media/)")
     ap.add_argument("--out", default="mods/RCMP_NB")
+    ap.add_argument("--preview-layout", action="store_true", help="also write *_layout.png with a labelled grid to place decal regions")
     a = ap.parse_args()
-    build(Path(a.pz_dir), Path(a.out))
+    build(Path(a.pz_dir), Path(a.out), a.preview_layout)
 
 
 if __name__ == "__main__":

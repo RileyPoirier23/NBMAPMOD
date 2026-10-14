@@ -26,7 +26,7 @@ def _load(osm_dir: Path):
 def build(argv: list[str]) -> None:
     import argparse
 
-    from . import buildings, modfiles, pzw, render, worldmap, zones
+    from . import buildings, modfiles, pois, pzw, render, worldmap, zones
 
     p = argparse.ArgumentParser(prog="nbmap build")
     p.add_argument("--osm", default="data/osm")
@@ -46,6 +46,7 @@ def build(argv: list[str]) -> None:
         render.write_world_json(out, w, chunks)
     buildings.generate(data, out)
     zones.generate(data, out, zombie_map=not a.no_zombie_map)
+    pois.generate(data, out)
     worldmap.generate(data, out)
     modfiles.generate(out)
     pzw.generate(out)

@@ -9,8 +9,9 @@ from . import config
 
 DESCRIPTION = (
     "A 1:1 recreation of south-eastern New Brunswick, Canada built from OpenStreetMap: "
-    "Moncton, Dieppe and Riverview, Salisbury, Petitcodiac and Havelock, joined by Route 2 "
-    "(Trans-Canada), Route 106, Route 112 and Route 880. Every street carries its real name on the "
+    "Moncton, Dieppe and Riverview, Shediac and Parlee Beach, Salisbury, Petitcodiac and Havelock, "
+    "and the Fundy coast down Route 114 through Hillsborough, Hopewell Rocks, Riverside-Albert and "
+    "Cape Enrage to Alma and Fundy National Park. Every street carries its real name on the "
     "in-game map; buildings stand on their real footprints; forests, fields, marshes and the "
     "Petitcodiac River are where they really are. Map data (c) OpenStreetMap contributors, ODbL."
 )

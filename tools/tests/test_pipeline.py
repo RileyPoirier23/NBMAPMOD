@@ -27,6 +27,9 @@ def test_build():
         mapdir = b / "mod" / "NBMap_Moncton" / "media" / "maps" / "Moncton, NB"
         ET.parse(mapdir / "worldmap.xml")
         xml = (mapdir / "worldmap.xml").read_text()
+        pois = json.loads((b / "pois.json").read_text())
+        assert any(p["snapped_to"] for p in pois), "POI snapping failed"
+        assert 'name="poi"' in xml and "Hopewell Rocks" in xml
         assert 'value="Main Street"' in xml and 'value="Trans-Canada Highway"' in xml
         obj = (mapdir / "objects.lua").read_text()
         assert obj.count("{") == obj.count("}") and "TownZone" in obj and 'type = "Vehicle"' in obj

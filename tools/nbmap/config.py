@@ -16,10 +16,10 @@ PROJECTION = "EPSG:32620"           # UTM 20N
 # World origin (top-left) in lon/lat. Everything east/south of this gets positive tile coords.
 # Chosen so the whole Havelock -> Moncton/Dieppe corridor fits.
 ORIGIN_LON = -65.42
-ORIGIN_LAT = 46.19
+ORIGIN_LAT = 46.30                  # north of Parlee Beach / Shediac
 
 # Cell offset so the mod never collides with vanilla Knox Country cells (which end near x=60).
-CELL_OFFSET_X = 120
+CELL_OFFSET_X = 70
 CELL_OFFSET_Y = 0
 
 
@@ -49,10 +49,24 @@ AREAS: list[Area] = [
     Area("corridor_moncton_salisbury", "Route 2/106 Moncton-Salisbury", 46.020, -65.010, 46.110, -64.925, 0),
     Area("corridor_salisbury_petitcodiac", "Route 2/106 Salisbury-Petitcodiac", 45.930, -65.145, 46.045, -65.080, 0),
     Area("corridor_petitcodiac_havelock", "Route 880 Petitcodiac-Havelock", 45.955, -65.320, 46.000, -65.210, 0),
+    # east: Shediac, Parlee Beach and Pointe-du-Chene via Route 15 / Route 133
+    Area("shediac", "Shediac, Parlee Beach & Pointe-du-Chene", 46.190, -64.600, 46.260, -64.480, 1),
+    Area("corridor_dieppe_shediac", "Route 15/133 Dieppe-Shediac", 46.100, -64.660, 46.200, -64.560, 0),
+    # south: Route 114 down the Petitcodiac to Hillsborough, Hopewell Rocks, Riverside-Albert,
+    # then Route 915 past Cape Enrage to Alma and Fundy National Park
+    Area("hillsborough", "Hillsborough", 45.900, -64.680, 45.960, -64.620, 1),
+    Area("corridor_riverview_hillsborough", "Route 114 Riverview-Hillsborough", 45.955, -64.760, 46.040, -64.640, 0),
+    Area("hopewell", "Hopewell Cape & Hopewell Rocks", 45.800, -64.620, 45.880, -64.540, 1),
+    Area("corridor_hillsborough_hopewell", "Route 114 Hillsborough-Hopewell", 45.875, -64.660, 45.905, -64.560, 0),
+    Area("riverside_albert", "Riverside-Albert", 45.720, -64.780, 45.780, -64.700, 1),
+    Area("corridor_hopewell_riverside", "Route 114 Hopewell-Riverside-Albert", 45.775, -64.760, 45.805, -64.560, 0),
+    Area("cape_enrage", "Cape Enrage", 45.580, -64.800, 45.640, -64.760, 1),
+    Area("corridor_riverside_alma", "Route 915/114 Riverside-Albert-Alma", 45.590, -64.960, 45.725, -64.740, 0),
+    Area("alma_fundy", "Alma & Fundy National Park", 45.560, -65.020, 45.640, -64.900, 1),
 ]
 
 MOD_ID = "NBMap_Moncton"
-MOD_NAME = "New Brunswick: Moncton, Salisbury, Petitcodiac & Havelock"
+MOD_NAME = "New Brunswick: Moncton, Shediac, Fundy & Hopewell Rocks"
 MAP_FOLDER = "Moncton, NB"          # media/maps/<MAP_FOLDER>
 
 # ---------------------------------------------------------------- WorldEd base-image palette
@@ -264,4 +278,61 @@ SPAWN_POINTS = {
     "Salisbury":               (46.0400, -65.0450),
     "Petitcodiac":             (45.9400, -65.1700),
     "Havelock":                (45.9850, -65.3500),
+    "Shediac":                 (46.2200, -64.5400),
+    "Hillsborough":            (45.9240, -64.6480),
+    "Alma (Fundy)":            (45.6030, -64.9440),
 }
+
+# Points of interest. Coordinates are approximate (from memory, roughly +-150 m); the generator
+# snaps each one to the nearest OSM feature carrying a matching name when one exists, which puts
+# it exactly on the real building/park. kind -> in-game map icon class.
+POIS = [
+    # Moncton
+    ("Magnetic Hill", "landmark", 46.1395, -64.8785, "Magnetic Hill"),
+    ("Magnetic Hill Zoo", "landmark", 46.1380, -64.8730, "Magnetic Hill Zoo"),
+    ("Casino New Brunswick", "commercial", 46.1360, -64.8690, "Casino New Brunswick"),
+    ("Avenir Centre", "arena", 46.0897, -64.7745, "Avenir Centre"),
+    ("Moncton Coliseum", "arena", 46.1105, -64.8300, "Coliseum"),
+    ("Capitol Theatre", "landmark", 46.0890, -64.7795, "Capitol Theatre"),
+    ("Resurgo Place", "landmark", 46.0920, -64.7730, "Resurgo"),
+    ("Bore View Park (Tidal Bore)", "park", 46.0960, -64.7690, "Bore"),
+    ("Victoria Park", "park", 46.0968, -64.7855, "Victoria Park"),
+    ("Centennial Park", "park", 46.0980, -64.8160, "Centennial Park"),
+    ("Mapleton Park", "park", 46.1180, -64.8440, "Mapleton Park"),
+    ("Irishtown Nature Park", "park", 46.1480, -64.7640, "Irishtown"),
+    ("Jones Lake", "water", 46.0945, -64.7920, "Jones Lake"),
+    ("The Moncton Hospital", "hospital", 46.1017, -64.7960, "Moncton Hospital"),
+    ("Dr. Georges-L.-Dumont Hospital", "hospital", 46.1035, -64.7620, "Dumont"),
+    ("Universite de Moncton", "school", 46.1040, -64.7780, "Universit"),
+    ("Crandall University", "school", 46.1230, -64.8290, "Crandall"),
+    ("Codiac Regional RCMP", "police", 46.0920, -64.7710, "RCMP"),
+    ("Moncton Fire Station 1", "fire", 46.0905, -64.7760, "Fire Station"),
+    ("Greater Moncton Romeo LeBlanc Airport", "airport", 46.1122, -64.6786, "Airport"),
+    ("Champlain Place (CF Champlain)", "commercial", 46.0975, -64.7268, "Champlain"),
+    ("Costco Moncton", "commercial", 46.1080, -64.8310, "Costco"),
+    ("Trinity Drive Power Centre", "commercial", 46.1200, -64.8360, "Trinity"),
+    ("Moncton Market", "commercial", 46.0905, -64.7775, "Moncton Market"),
+    ("Highfield Square / Avenir", "commercial", 46.0920, -64.7765, "Highfield"),
+    ("Riverview Mill Creek Nature Park", "park", 46.0470, -64.8380, "Mill Creek"),
+    ("Gunningsville Bridge", "landmark", 46.0885, -64.7890, "Gunningsville"),
+    ("Dieppe Market", "commercial", 46.0985, -64.7225, "Dieppe Market"),
+    # Shediac
+    ("The World's Largest Lobster", "landmark", 46.2185, -64.5495, "Lobster"),
+    ("Parlee Beach", "beach", 46.2410, -64.5110, "Parlee"),
+    ("Pointe-du-Chene Wharf", "landmark", 46.2375, -64.5080, "Pointe-du-Ch"),
+    ("Shediac Island", "landmark", 46.2300, -64.5300, "Shediac Island"),
+    ("Shediac RCMP Detachment", "police", 46.2215, -64.5415, "RCMP"),
+    # Route 114 / Fundy coast
+    ("Hillsborough (Albert County Museum)", "landmark", 45.9240, -64.6480, "Museum"),
+    ("Hopewell Rocks", "landmark", 45.8210, -64.5790, "Hopewell Rocks"),
+    ("Hopewell Cape", "town", 45.8560, -64.5730, "Hopewell Cape"),
+    ("Riverside-Albert", "town", 45.7470, -64.7450, "Riverside-Albert"),
+    ("Cape Enrage Lighthouse", "landmark", 45.5955, -64.7790, "Cape Enrage"),
+    ("Alma", "town", 45.6030, -64.9440, "Alma"),
+    ("Fundy National Park Headquarters", "landmark", 45.5990, -64.9500, "Fundy National Park"),
+    ("Herring Cove", "beach", 45.5880, -64.9290, "Herring Cove"),
+    # West
+    ("Salisbury Big Stop", "commercial", 46.0400, -65.0400, "Big Stop"),
+    ("Petitcodiac", "town", 45.9400, -65.1700, "Petitcodiac"),
+    ("Havelock", "town", 45.9850, -65.3500, "Havelock"),
+]
