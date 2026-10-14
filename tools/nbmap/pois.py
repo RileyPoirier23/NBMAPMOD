@@ -15,16 +15,24 @@ SNAP_RADIUS = 1500   # tiles (metres)
 def resolve(data: OSMData) -> list[dict]:
     named = [f for f in data.features if f.tag("name")]
     out = []
-    for title, kind, lat, lon, needle in config.POIS:
+    addressed = [f for f in data.features if f.tag("addr:housenumber") and f.tag("addr:street")]
+    for title, kind, lat, lon, needle, addr in config.POIS:
         x, y = geo.lonlat_to_tile(lon, lat)
         p = Point(x, y)
         best, bestd = None, SNAP_RADIUS
+        if addr:   # exact civic address beats a name match
+            for f in addressed:
+                if f.tag("addr:housenumber") == addr["housenumber"] and addr["street"].lower() in f.tag("addr:street").lower():
+                    d = f.geom.distance(p)
+                    if d < 3000 and d < bestd + 3000:
+                        best, bestd = f, d
         n = needle.lower()
-        for f in named:
-            if n in f.tag("name").lower():
-                d = f.geom.distance(p)
-                if d < bestd:
-                    best, bestd = f, d
+        if best is None:
+            for f in named:
+                if n in f.tag("name").lower():
+                    d = f.geom.distance(p)
+                    if d < bestd:
+                        best, bestd = f, d
         if best is not None:
             c = best.geom.centroid
             x, y, snapped = c.x, c.y, best.tag("name")

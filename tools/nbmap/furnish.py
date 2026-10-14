@@ -154,7 +154,7 @@ def harvest_tbx(folder: Path) -> dict:
         for f in root.findall("furniture"):
             pieces = {}
             for e in f.findall("entry"):
-                pieces[e.get("orient", "W")] = [[int(t.get("x")), int(t.get("y")), t.get("tile")] for t in e.findall("tile")]
+                pieces[e.get("orient", "W")] = [[int(t.get("x")), int(t.get("y")), t.get("name") or t.get("tile")] for t in e.findall("tile")]
             furn.append(dict(layer=f.get("layer", "Furniture"), tiles=pieces))
         rooms = [r.get("InternalName", "") for r in root.findall("room")]
         for fl in root.findall("floor"):
@@ -274,11 +274,12 @@ class Furnisher:
     def xml(self) -> list[str]:
         out = []
         for piece in self.catalog:
-            out.append(f'    <furniture layer="{piece.get("layer", "Furniture")}">')
+            layer = piece.get("layer", "Furniture")
+            out.append('    <furniture>' if layer == "Furniture" else f'    <furniture layer="{layer}">')
             for orient, tiles in piece["tiles"].items():
                 out.append(f'        <entry orient="{orient}">')
                 for tx, ty, tile in tiles:
-                    out.append(f'            <tile x="{tx}" y="{ty}" tile="{tile}"/>')
+                    out.append(f'            <tile x="{tx}" y="{ty}" name="{tile}"/>')
                 out.append('        </entry>')
             out.append('    </furniture>')
         return out

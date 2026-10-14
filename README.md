@@ -1,6 +1,6 @@
 # NBMAPMOD - New Brunswick for Project Zomboid
 
-Two mods for Project Zomboid (Build 41):
+Two mods for Project Zomboid (Build 41). Coverage: Moncton, Dieppe, Riverview, Shediac and Parlee Beach, Salisbury, Petitcodiac, Havelock, Hillsborough, Hopewell Rocks, Riverside-Albert, Cape Enrage, Alma and Fundy National Park, with the highways between them.
 
 | Folder | What it is |
 | --- | --- |
@@ -30,7 +30,13 @@ copyrighted by The Indie Stone or by map providers is stored in this repository.
   cemeteries with scattered trees, hedges, individual mapped trees, yard trees and bushes around
   houses. Unmapped land between communities is filled with noise-driven Acadian forest and
   clearings, so the drive from Havelock to Moncton is through real bush.
-* Water: the Petitcodiac, Jones Lake, every mapped pond and stream.
+* Water: the Petitcodiac, Jones Lake, Shediac Bay, every mapped pond and stream.
+* Points of interest named on the in-game map and snapped to their real OSM building or civic
+  address: Magnetic Hill, the Avenir Centre, Resurgo Place, Bore View Park, both hospitals, the
+  universities, the new Codiac RCMP detachment on Albert Street and the old one on Main, all five
+  Moncton fire halls, the airport, CF Champlain, the World's Largest Lobster, Parlee Beach,
+  Pointe-du-Chene wharf, Hopewell Rocks, Cape Enrage, Alma and Fundy National Park, and more
+  (`build/POIS.md` lists them with their tile coordinates). Sources are in `docs/research.md`.
 * `objects.lua` zones: TownZone, Forest / DeepForest / Vegitation (foraging), FarmLand, trailer
   parks, vehicle zones (parking, police, fire, medical, farm, car dealers, junkyards, Trans-Canada
   traffic jams). Spawn points in every community snap to a real house.
@@ -80,10 +86,11 @@ pipeline offline on a synthetic town.
 * **Tile names.** `tools/nbmap/data/Rules.txt` and `data/themes.json` use vanilla B41 tile
   sheet names. If your TileZed flags any as missing, fix the name in those two files and
   rebuild; every building and ground tile updates at once.
-* **Formats.** The `.pzw` and `.tbx` writers follow TileZed's XML formats; they have been checked
-  for well-formedness but not opened in the GUI from this repository. If WorldEd rejects the
-  project, the fallback is in `README_WORLDED.txt` (create a world and add the `bmp/` images;
-  their positions are listed in the `.pzw`).
+* **Formats.** The `.pzw` and `.tbx` writers were checked line by line against the TileZed and
+  WorldEd source (see `docs/research.md`), and the build ships WorldEd's own default
+  `Rules.txt`, `Blends.txt` and `MapBaseXML.txt` with New Brunswick vegetation rules appended,
+  so the images use the stock colour table. They have not yet been opened in the GUI from this
+  repository; if anything is refused, `README_WORLDED.txt` has the manual fallback.
 
 Tunables (areas, palette, road widths, vegetation density, building themes, zombie density,
 spawn points) are all in `tools/nbmap/config.py`.

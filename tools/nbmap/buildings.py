@@ -13,6 +13,7 @@ BuildingEd first; everything about the layout lives in this one module.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import random
@@ -36,9 +37,10 @@ ROOM_COLORS = {}
 
 
 def _room_color(name: str) -> str:
+    """BuildingEd stores room colours as 'r g b'; derive a stable one from the name."""
     if name not in ROOM_COLORS:
-        h = abs(hash(name)) % 0xFFFFFF
-        ROOM_COLORS[name] = f"#{h:06x}"
+        h = int(hashlib.md5(name.encode()).hexdigest()[:6], 16)
+        ROOM_COLORS[name] = f"{(h >> 16) & 255} {(h >> 8) & 255} {h & 255}"
     return ROOM_COLORS[name]
 
 
@@ -66,18 +68,22 @@ def _sheet_offset(tile: str, n: int) -> str:
     return f"{base}_{int(idx) + n}"
 
 
-# BuildingEd enumerations for each tile category (order matters: it is the sheet order).
+# BuildingEd tile categories: (enum name, sheet offset) in the order BuildingEd writes them.
+# Offsets come from TileZed's buildingtiles.cpp createEntryFromSingleTile().
 CATEGORY_ENUMS = {
-    "exterior_walls": ["West", "North", "NorthWest", "SouthEast", "WestWindow", "NorthWindow", "WestDoor", "NorthDoor"],
-    "interior_walls": ["West", "North", "NorthWest", "SouthEast", "WestWindow", "NorthWindow", "WestDoor", "NorthDoor"],
-    "doors": ["West", "North"],
-    "door_frames": ["West", "North"],
-    "windows": ["West", "North"],
-    "curtains": ["West", "East", "North", "South"],
-    "stairs": ["West1", "West2", "West3", "North1", "North2", "North3"],
-    "roof_tops": ["West1", "West2", "West3", "North1", "North2", "North3"],
-    "floors": ["Floor"],
+    "exterior_walls": [("West", 0), ("North", 1), ("NorthWest", 2), ("SouthEast", 3), ("WestWindow", 8), ("NorthWindow", 9), ("WestDoor", 10), ("NorthDoor", 11)],
+    "interior_walls": [("West", 0), ("North", 1), ("NorthWest", 2), ("SouthEast", 3), ("WestWindow", 8), ("NorthWindow", 9), ("WestDoor", 10), ("NorthDoor", 11)],
+    "doors": [("West", 0), ("North", 1), ("WestOpen", 2), ("NorthOpen", 3)],
+    "door_frames": [("West", 0), ("North", 1)],
+    "windows": [("West", 0), ("North", 1)],
+    "curtains": [("West", 0), ("East", 1), ("North", 2), ("South", 3)],
+    "stairs": [("West1", 0), ("West2", 1), ("West3", 2), ("North1", 8), ("North2", 9), ("North3", 10)],
+    "roof_tops": [("West1", 0), ("West2", 0), ("West3", 0), ("North1", 0), ("North2", 0), ("North3", 0)],
+    "floors": [("Floor", 0)],
 }
+# <building> root attributes (BuildingTemplate::initNames) and <room> attributes (Room::initNames)
+BUILDING_SLOTS = ["ExteriorWall", "ExteriorWallTrim", "Door", "DoorFrame", "Window", "Curtains", "Shutters", "Stairs", "RoofCap", "RoofSlope", "RoofTop", "GrimeWall"]
+ROOM_SLOTS = ["InteriorWall", "InteriorWallTrim", "Floor", "GrimeFloor", "GrimeWall"]
 
 
 @dataclass
@@ -216,9 +222,8 @@ class TbxWriter:
         entries: list[tuple[str, list[tuple[str, str]]]] = []
 
         def entry(cat: str, base_tile: str) -> int:
-            enums = CATEGORY_ENUMS[cat]
-            entries.append((cat, [(e, _sheet_offset(base_tile, i)) for i, e in enumerate(enums)]))
-            return len(entries)   # 1-based; 0 = none
+            entries.append((cat, [(e, _sheet_offset(base_tile, off)) for e, off in CATEGORY_ENUMS[cat]]))
+            return len(entries)   # 1-based; 0 = none (BuildingReader::getEntry)
 
         ext = entry("exterior_walls", t["exterior_walls"])
         door = entry("doors", t["doors"])
@@ -229,6 +234,8 @@ class TbxWriter:
         rooftop = entry("roof_tops", t["roof_tops"])
         interior = entry("interior_walls", t["interior_walls"])
         floor = entry("floors", t["floor"])
+        slots = dict(ExteriorWall=ext, ExteriorWallTrim=0, Door=door, DoorFrame=frame, Window=win, Curtains=curt,
+                     Shutters=0, Stairs=stairs, RoofCap=0, RoofSlope=0, RoofTop=rooftop, GrimeWall=0)
 
         h, w = b.mask.shape
         n_rooms = max(1, min(len(b.rooms), (b.mask.sum() // 20) or 1))
@@ -237,10 +244,7 @@ class TbxWriter:
         room_names = [b.rooms[(i - 1) % len(b.rooms)] for i in ids]
 
         out = ['<?xml version="1.0" encoding="UTF-8"?>']
-        out.append(
-            f'<building version="2" width="{w}" height="{h}" ExteriorWall="{ext}" ExteriorWallTrim="0" Door="{door}" '
-            f'DoorFrame="{frame}" Window="{win}" Curtains="{curt}" Shutters="0" Stairs="{stairs}" RoofCap="0" '
-            f'RoofSlope="0" RoofTop="{rooftop}" GrimeWall="0" GrimeFloor="0">')
+        out.append(f'<building version="3" width="{w}" height="{h}" ' + " ".join(f'{k}="{slots[k]}"' for k in BUILDING_SLOTS) + ">")
         for cat, tiles in entries:
             out.append(f'    <tile_entry category="{cat}">')
             for e, tile in tiles:
@@ -248,8 +252,9 @@ class TbxWriter:
             out.append('    </tile_entry>')
         for i, name in zip(ids, room_names):
             pretty = name.replace("store", " store").replace("room", " room").title()
+            rs = dict(InteriorWall=interior, InteriorWallTrim=0, Floor=floor, GrimeFloor=0, GrimeWall=0)
             out.append(f'    <room Name={quoteattr(pretty)} InternalName="{name}" Color="{_room_color(name)}" '
-                       f'InteriorWall="{interior}" InteriorWallTrim="0" Floor="{floor}" GrimeFloor="0" GrimeWall="0"/>')
+                       + " ".join(f'{k}="{rs[k]}"' for k in ROOM_SLOTS) + "/>")
 
         # objects shared by all floors
         exterior = list(_exterior_edges(rooms))
@@ -289,10 +294,10 @@ class TbxWriter:
             big = max(sizes, key=sizes.get)
             ys, xs = np.nonzero(rooms == big)
             x0, x1, y0, y1 = xs.min(), xs.max(), ys.min(), ys.max()
-            if x1 - x0 >= 4:
-                stair = (x0 + 1, y0 + 1, "W")      # occupies (x..x+2, y)
-            elif y1 - y0 >= 4:
-                stair = (x0 + 1, y0 + 1, "N")      # occupies (x, y..y+2)
+            if x1 - x0 >= 5:
+                stair = (x0, y0 + 1, "W")          # Stairs::bounds() = 5 tiles along x
+            elif y1 - y0 >= 5:
+                stair = (x0 + 1, y0, "N")          # 5 tiles along y
 
         rooms_txt = "\n".join(",".join(str(v) for v in row) + "," for row in rooms.tolist())
         furn = furnish.Furnisher(self.furniture, rng) if self.furniture else None
@@ -303,7 +308,7 @@ class TbxWriter:
                 blocked = set()
                 if stair:
                     sx, sy, sd = stair
-                    blocked |= {(sx + i, sy) for i in range(4)} if sd == "W" else {(sx, sy + i) for i in range(4)}
+                    blocked |= {(sx + i, sy) for i in range(5)} if sd == "W" else {(sx, sy + i) for i in range(5)}
                 for i, name in zip(ids, room_names):
                     objs += furn.furnish_room(rooms, i, name, blocked, doors_xy)
             floors_furniture.append(objs)
@@ -312,23 +317,24 @@ class TbxWriter:
             out[insert_at:insert_at] = furn.xml()
         for level in range(b.levels):
             out.append('    <floor>')
-            out.append('        <rooms>')
-            out.append(rooms_txt)
-            out.append('        </rooms>')
+            floor_start = len(out)
             for x, y, d in sorted(doors_xy):
                 if level > 0 and front_edges and (x, y, d) == front_edges[0]:
                     continue   # no front door hanging in mid-air upstairs
-                out.append(f'        <object type="door" x="{x}" y="{y}" dir="{d}" Tile="{door}" FrameTile="{frame}"/>')
+                out.append(f'        <object type="door" FrameTile="{frame}" x="{x}" y="{y}" dir="{d}" Tile="{door}"/>')
             for x, y, d in windows_xy:
-                out.append(f'        <object type="window" x="{x}" y="{y}" dir="{d}" Tile="{win}" CurtainsTile="{curt}" ShuttersTile="0"/>')
+                out.append(f'        <object type="window" CurtainsTile="{curt}" ShuttersTile="0" x="{x}" y="{y}" dir="{d}" Tile="{win}"/>')
             if stair and level < b.levels - 1:
                 sx, sy, sd = stair
                 out.append(f'        <object type="stairs" x="{sx}" y="{sy}" dir="{sd}" Tile="{stairs}"/>')
             for x, y, orient, idx in floors_furniture[level]:
-                out.append(f'        <object type="furniture" x="{x}" y="{y}" orient="{orient}" FurnitureTiles="{idx}"/>')
+                out.append(f'        <object type="furniture" FurnitureTiles="{idx - 1}" orient="{orient}" x="{x}" y="{y}"/>')
             if level == b.levels - 1:
-                out.append(f'        <object type="roof" x="0" y="0" width="{w - 1}" height="{h - 1}" RoofType="FlatTop" Depth="Zero" '
-                           f'cappedW="true" cappedN="true" cappedE="true" cappedS="true" CapTiles="0" SlopeTiles="0" TopTiles="{rooftop}"/>')
+                out.append(f'        <object type="roof" width="{w - 1}" height="{h - 1}" RoofType="FlatTop" Depth="Zero" '
+                           f'cappedW="true" cappedN="true" cappedE="true" cappedS="true" CapTiles="0" SlopeTiles="0" TopTiles="{rooftop}" x="0" y="0"/>')
+            out.append('        <rooms>')
+            out.append(rooms_txt)
+            out.append('        </rooms>')
             out.append('    </floor>')
         out.append('</building>')
         return "\n".join(out) + "\n"

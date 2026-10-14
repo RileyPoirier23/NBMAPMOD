@@ -68,47 +68,58 @@ AREAS: list[Area] = [
 MOD_ID = "NBMap_Moncton"
 MOD_NAME = "New Brunswick: Moncton, Shediac, Fundy & Hopewell Rocks"
 MAP_FOLDER = "Moncton, NB"          # media/maps/<MAP_FOLDER>
+MOD_FOLDER_SAFE = MAP_FOLDER        # used inside relative paths written to the .pzw
 
 # ---------------------------------------------------------------- WorldEd base-image palette
-# These are the colours WorldEd's BMPToTMX converts to ground tiles (see Rules.txt).
-# Keep them in sync with tools/nbmap/data/Rules.txt.
+# These are the exact colours of WorldEd's default Rules.txt (pzworlded/Rules.txt), so the
+# images work with a stock TileZed install. See data/worlded/Rules.txt.
 C = {
-    "grass_dark":     (90, 100, 35),
-    "grass_medium":   (117, 117, 47),
-    "grass_light":    (145, 135, 60),
-    "sand":           (210, 200, 160),
-    "dirt":           (120, 70, 20),
-    "dirt_gravel":    (140, 70, 15),
-    "asphalt_dark":   (100, 100, 100),
-    "asphalt_medium": (120, 120, 120),
-    "asphalt_light":  (165, 160, 140),
+    "grass_dark":     (90, 100, 35),     # darkgrass
+    "grass_medium":   (117, 117, 47),    # medgrass
+    "grass_light":    (145, 135, 60),    # lightgrass
+    "sand":           (210, 200, 160),   # sand
+    "dirt":           (120, 70, 20),     # dirt
+    "dirt_gravel":    (140, 70, 15),     # gravel dirt (floors_exterior_natural_01_12)
+    "asphalt_dark":   (100, 100, 100),   # street2 - main roads
+    "asphalt_medium": (120, 120, 120),   # street
+    "asphalt_light":  (165, 160, 140),   # lightgravel - sidewalks, lots, light asphalt
     "pothole_dark":   (110, 100, 100),
     "pothole_light":  (130, 120, 120),
     "water":          (0, 138, 255),
-    "concrete":       (190, 190, 180),
-    "mud":            (80, 55, 20),
-    "crop_rows":      (160, 110, 40),
+    "concrete":       (165, 160, 140),   # sidewalks use the light asphalt tiles
+    "mud":            (80, 55, 20),      # dirtgrass - tidal flats, marsh ground
+    "crop_rows":      (120, 70, 20),     # ploughed rows are plain dirt; crops go on the veg layer
 }
 
 # ---------------------------------------------------------------- WorldEd vegetation-image palette
+# Default WorldEd vegetation colours (they only apply where the base pixel is one of the
+# three grass colours; marsh reeds also apply on dirtgrass) plus NB extras defined in
+# data/worlded/Rules_nb_extra.txt.
 V = {
     "none":           (0, 0, 0),
-    "forest_dense":   (255, 0, 0),      # dense mixed trees + undergrowth
-    "forest":         (200, 0, 0),      # trees
-    "forest_light":   (127, 0, 0),      # scattered trees
-    "conifer_dense":  (255, 64, 0),     # spruce / fir / pine stands (Acadian forest)
-    "conifer":        (200, 64, 0),
-    "bushes":         (0, 128, 0),
-    "tall_grass":     (0, 255, 0),
-    "wetland":        (0, 160, 160),    # reeds / marsh grass
-    "flowers":        (255, 0, 255),
-    "crops":          (255, 255, 0),
-    "hedge":          (0, 80, 0),
+    "forest_dense":   (200, 0, 0),      # "Dense Trees + grass"
+    "forest":         (255, 0, 0),      # "Trees"
+    "forest_light":   (127, 0, 0),      # "Trees + grass"
+    "conifer_dense":  (255, 64, 0),     # NB extra: spruce/fir stand, dense
+    "conifer":        (200, 64, 0),     # NB extra: spruce/fir stand
+    "fir_sparse":     (64, 0, 0),       # "Fir Trees + grass" (default rule)
+    "bushes":         (150, 0, 200),    # "Bushes & Grass"
+    "bushes_dense":   (200, 0, 200),    # "Dense Bushes & Grass"
+    "bushes_sparse":  (100, 0, 200),    # "Sparse Bushes & Grass"
+    "shrubland":      (255, 0, 255),    # "Bushes, Grass, Few Trees"
+    "park_scatter":   (0, 128, 0),      # "Grass + Few Trees"
+    "tall_grass":     (0, 255, 0),      # "Grass (all types)"
+    "wetland":        (0, 160, 160),    # NB extra: salt marsh / reeds
+    "flowers":        (255, 128, 255),  # NB extra: wildflower meadow
+    "crops":          (255, 128, 0),    # "Farm Corn"
+    "crops2":         (220, 100, 0),    # "Farm Corn 2"
+    "hedge":          (0, 80, 0),       # NB extra
 }
 
 # ---------------------------------------------------------------- road classes -> (surface width, base colour, sidewalk)
 # widths are in tiles (metres) and are for a single OSM way. Divided highways are
 # two ways in OSM so each carriageway gets its own strip, exactly as on the ground.
+# Note: sidewalks ('concrete') and 'asphalt_light' are the same WorldEd colour.
 ROADS = {
     "motorway":      dict(width=9, color="asphalt_dark", shoulder="asphalt_medium", shoulder_w=2, sidewalk=False, clear=16),
     "motorway_link": dict(width=5, color="asphalt_dark", shoulder="asphalt_medium", shoulder_w=1, sidewalk=False, clear=10),
@@ -287,52 +298,61 @@ SPAWN_POINTS = {
 # snaps each one to the nearest OSM feature carrying a matching name when one exists, which puts
 # it exactly on the real building/park. kind -> in-game map icon class.
 POIS = [
+    # (title, kind, lat, lon, name-needle, optional {"street": ..., "housenumber": ...} for exact address snapping)
     # Moncton
-    ("Magnetic Hill", "landmark", 46.1395, -64.8785, "Magnetic Hill"),
-    ("Magnetic Hill Zoo", "landmark", 46.1380, -64.8730, "Magnetic Hill Zoo"),
-    ("Casino New Brunswick", "commercial", 46.1360, -64.8690, "Casino New Brunswick"),
-    ("Avenir Centre", "arena", 46.0897, -64.7745, "Avenir Centre"),
-    ("Moncton Coliseum", "arena", 46.1105, -64.8300, "Coliseum"),
-    ("Capitol Theatre", "landmark", 46.0890, -64.7795, "Capitol Theatre"),
-    ("Resurgo Place", "landmark", 46.0920, -64.7730, "Resurgo"),
-    ("Bore View Park (Tidal Bore)", "park", 46.0960, -64.7690, "Bore"),
-    ("Victoria Park", "park", 46.0968, -64.7855, "Victoria Park"),
-    ("Centennial Park", "park", 46.0980, -64.8160, "Centennial Park"),
-    ("Mapleton Park", "park", 46.1180, -64.8440, "Mapleton Park"),
-    ("Irishtown Nature Park", "park", 46.1480, -64.7640, "Irishtown"),
-    ("Jones Lake", "water", 46.0945, -64.7920, "Jones Lake"),
-    ("The Moncton Hospital", "hospital", 46.1017, -64.7960, "Moncton Hospital"),
-    ("Dr. Georges-L.-Dumont Hospital", "hospital", 46.1035, -64.7620, "Dumont"),
-    ("Universite de Moncton", "school", 46.1040, -64.7780, "Universit"),
-    ("Crandall University", "school", 46.1230, -64.8290, "Crandall"),
-    ("Codiac Regional RCMP", "police", 46.0920, -64.7710, "RCMP"),
-    ("Moncton Fire Station 1", "fire", 46.0905, -64.7760, "Fire Station"),
-    ("Greater Moncton Romeo LeBlanc Airport", "airport", 46.1122, -64.6786, "Airport"),
-    ("Champlain Place (CF Champlain)", "commercial", 46.0975, -64.7268, "Champlain"),
-    ("Costco Moncton", "commercial", 46.1080, -64.8310, "Costco"),
-    ("Trinity Drive Power Centre", "commercial", 46.1200, -64.8360, "Trinity"),
-    ("Moncton Market", "commercial", 46.0905, -64.7775, "Moncton Market"),
-    ("Highfield Square / Avenir", "commercial", 46.0920, -64.7765, "Highfield"),
-    ("Riverview Mill Creek Nature Park", "park", 46.0470, -64.8380, "Mill Creek"),
-    ("Gunningsville Bridge", "landmark", 46.0885, -64.7890, "Gunningsville"),
-    ("Dieppe Market", "commercial", 46.0985, -64.7225, "Dieppe Market"),
+    ("Magnetic Hill", "landmark", 46.1395, -64.8785, "Magnetic Hill", None),
+    ("Magnetic Hill Zoo", "landmark", 46.1380, -64.8730, "Magnetic Hill Zoo", None),
+    ("Magic Mountain Water Park", "landmark", 46.1370, -64.8700, "Magic Mountain", None),
+    ("Casino New Brunswick", "commercial", 46.1360, -64.8690, "Casino", None),
+    ("Avenir Centre", "arena", 46.0897, -64.7745, "Avenir Centre", {"street": "Main", "housenumber": "150"}),
+    ("Moncton Coliseum", "arena", 46.1105, -64.8300, "Coliseum", None),
+    ("Capitol Theatre", "landmark", 46.0890, -64.7795, "Capitol Theatre", {"street": "Main", "housenumber": "811"}),
+    ("Resurgo Place (Moncton Museum)", "landmark", 46.0920, -64.7730, "Resurgo", {"street": "Mountain", "housenumber": "20"}),
+    ("Bore View Park (Tidal Bore)", "park", 46.0960, -64.7690, "Bore", None),
+    ("Victoria Park", "park", 46.0968, -64.7855, "Victoria Park", None),
+    ("Centennial Park", "park", 46.0980, -64.8160, "Centennial Park", None),
+    ("Mapleton Park", "park", 46.1180, -64.8440, "Mapleton Park", None),
+    ("Irishtown Nature Park", "park", 46.1480, -64.7640, "Irishtown", None),
+    ("Jones Lake", "water", 46.0945, -64.7920, "Jones Lake", None),
+    ("The Moncton Hospital", "hospital", 46.1017, -64.7960, "Moncton Hospital", {"street": "Macbeath", "housenumber": "135"}),
+    ("Dr. Georges-L.-Dumont University Hospital Centre", "hospital", 46.1035, -64.7620, "Dumont", {"street": "Dr. Georges-L.-Dumont", "housenumber": "330"}),
+    ("Universite de Moncton", "school", 46.1040, -64.7780, "Universit", None),
+    ("Crandall University", "school", 46.1230, -64.8290, "Crandall", None),
+    ("Codiac Regional RCMP (new detachment, 199 Albert St)", "police", 46.0930, -64.7720, "RCMP", {"street": "Albert", "housenumber": "199"}),
+    ("Codiac Regional RCMP (former HQ, 520 Main St)", "police", 46.0905, -64.7765, "RCMP", {"street": "Main", "housenumber": "520"}),
+    ("Moncton Fire Station 1 (80 Caledonia Rd)", "fire", 46.1075, -64.8250, "Fire", {"street": "Caledonia", "housenumber": "80"}),
+    ("Moncton Fire Station 2 (800 St. George Blvd)", "fire", 46.0940, -64.8150, "Fire", {"street": "St. George", "housenumber": "800"}),
+    ("Moncton Fire Station 3 (299 Botsford St)", "fire", 46.0960, -64.7760, "Fire", {"street": "Botsford", "housenumber": "299"}),
+    ("Moncton Fire Station (72 Brandon St)", "fire", 46.1020, -64.7560, "Fire", {"street": "Brandon", "housenumber": "72"}),
+    ("Moncton Fire Station 5 (99 Hildegarde Dr)", "fire", 46.1280, -64.7990, "Fire", {"street": "Hildegard", "housenumber": "99"}),
+    ("Greater Moncton Romeo LeBlanc International Airport", "airport", 46.1122, -64.6786, "Airport", None),
+    ("CF Champlain (Champlain Place)", "commercial", 46.0975, -64.7268, "Champlain", {"street": "Paul", "housenumber": "477"}),
+    ("Costco Moncton", "commercial", 46.1080, -64.8310, "Costco", None),
+    ("Trinity Drive retail", "commercial", 46.1200, -64.8360, "Trinity", None),
+    ("Moncton Market", "commercial", 46.0905, -64.7775, "Moncton Market", {"street": "Westmorland", "housenumber": "120"}),
+    ("Riverview Mill Creek Nature Park", "park", 46.0470, -64.8380, "Mill Creek", None),
+    ("Gunningsville Bridge", "landmark", 46.0885, -64.7890, "Gunningsville", None),
+    ("Dieppe Market", "commercial", 46.0985, -64.7225, "Dieppe Market", None),
+    ("CN Gordon Yard", "industrial", 46.1250, -64.7250, "Gordon Yard", None),
     # Shediac
-    ("The World's Largest Lobster", "landmark", 46.2185, -64.5495, "Lobster"),
-    ("Parlee Beach", "beach", 46.2410, -64.5110, "Parlee"),
-    ("Pointe-du-Chene Wharf", "landmark", 46.2375, -64.5080, "Pointe-du-Ch"),
-    ("Shediac Island", "landmark", 46.2300, -64.5300, "Shediac Island"),
-    ("Shediac RCMP Detachment", "police", 46.2215, -64.5415, "RCMP"),
+    ("The World's Largest Lobster (Rotary Park)", "landmark", 46.2185, -64.5495, "Lobster", None),
+    ("Parlee Beach Provincial Park", "beach", 46.2410, -64.5110, "Parlee", None),
+    ("Pointe-du-Chene Wharf", "landmark", 46.2375, -64.5080, "Pointe-du-Ch", None),
+    ("Shediac Island", "landmark", 46.2300, -64.5300, "Shediac Island", None),
+    ("Shediac RCMP Detachment (77 Ohio Rd)", "police", 46.2215, -64.5415, "RCMP", {"street": "Ohio", "housenumber": "77"}),
+    ("Shediac Bay Marina", "landmark", 46.2240, -64.5330, "Marina", None),
     # Route 114 / Fundy coast
-    ("Hillsborough (Albert County Museum)", "landmark", 45.9240, -64.6480, "Museum"),
-    ("Hopewell Rocks", "landmark", 45.8210, -64.5790, "Hopewell Rocks"),
-    ("Hopewell Cape", "town", 45.8560, -64.5730, "Hopewell Cape"),
-    ("Riverside-Albert", "town", 45.7470, -64.7450, "Riverside-Albert"),
-    ("Cape Enrage Lighthouse", "landmark", 45.5955, -64.7790, "Cape Enrage"),
-    ("Alma", "town", 45.6030, -64.9440, "Alma"),
-    ("Fundy National Park Headquarters", "landmark", 45.5990, -64.9500, "Fundy National Park"),
-    ("Herring Cove", "beach", 45.5880, -64.9290, "Herring Cove"),
+    ("Hillsborough (Albert County Museum)", "landmark", 45.9240, -64.6480, "Museum", None),
+    ("Hopewell Rocks (the Flowerpot Rocks)", "landmark", 45.8210, -64.5790, "Hopewell Rocks", None),
+    ("Hopewell Cape", "town", 45.8560, -64.5730, "Hopewell Cape", None),
+    ("Riverside-Albert", "town", 45.7470, -64.7450, "Riverside-Albert", None),
+    ("Cape Enrage Lighthouse", "landmark", 45.5955, -64.7790, "Cape Enrage", None),
+    ("Alma", "town", 45.6030, -64.9440, "Alma", None),
+    ("Fundy National Park Headquarters", "landmark", 45.5990, -64.9500, "Fundy National Park", None),
+    ("Herring Cove", "beach", 45.5880, -64.9290, "Herring Cove", None),
+    ("Dickson Falls", "landmark", 45.5990, -64.9680, "Dickson Falls", None),
     # West
-    ("Salisbury Big Stop", "commercial", 46.0400, -65.0400, "Big Stop"),
-    ("Petitcodiac", "town", 45.9400, -65.1700, "Petitcodiac"),
-    ("Havelock", "town", 45.9850, -65.3500, "Havelock"),
+    ("Salisbury Big Stop", "commercial", 46.0400, -65.0400, "Big Stop", None),
+    ("Petitcodiac", "town", 45.9400, -65.1700, "Petitcodiac", None),
+    ("Havelock", "town", 45.9850, -65.3500, "Havelock", None),
 ]

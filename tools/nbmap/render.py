@@ -227,7 +227,7 @@ class World:
         if farm:
             rows = ((np.arange(S)[None, :] + ox) // 2) % 2 == 0
             ch.base[farm_mask & rows] = C["dirt"]
-            ch.base[farm_mask & ~rows] = C["crop_rows"]
+            ch.base[farm_mask & ~rows] = C["mud"]
 
         # --- water
         water = [f for f in area_feats if any(f.tag(k) == v for k, v in WATER_TAGS) or f.tag("water")]
@@ -331,11 +331,12 @@ class World:
             return ch.poly_mask(fs) if fs else np.zeros((S, S), bool)
 
         scrub = area_mask(lambda f: f.tag("natural") in ("scrub", "heath"))
-        veg[scrub & (rnd < 0.5)] = V["bushes"]
-        veg[scrub & (rnd >= 0.5) & (rnd < 0.62)] = V["forest_light"]
-        veg[scrub & (rnd >= 0.62) & (rnd < 0.85)] = V["tall_grass"]
+        veg[scrub & (nf > 0.5)] = V["shrubland"]
+        veg[scrub & (nf <= 0.5) & (rnd < 0.6)] = V["bushes"]
+        veg[scrub & (nf <= 0.5) & (rnd >= 0.6)] = V["bushes_sparse"]
         wet = area_mask(lambda f: f.tag("natural") == "wetland" or f.tag("wetland"))
         veg[wet & (nf > 0.3)] = V["wetland"]
+        ch.base[wet & (nf <= 0.3)] = C["grass_dark"]
         veg[wet & (nf <= 0.3) & (rnd < 0.3)] = V["bushes"]
         veg[wet & (nf <= 0.3) & (rnd >= 0.3) & (rnd < 0.4)] = V["forest_light"]
         meadow = area_mask(lambda f: f.tag("landuse") in ("meadow", "grass") or f.tag("natural") == "grassland")
@@ -347,15 +348,21 @@ class World:
         veg[orchard & grid] = V["forest_light"]
         if farm:
             inner = erode(farm_mask, vcfg["field_margin_tiles"])
-            veg[inner & (rnd < 0.85)] = V["crops"]
-            veg[farm_mask & ~inner & (rnd < 0.5)] = V["tall_grass"]
+            # crops only grow where WorldEd allows vegetation: give the inner field a grass base
+            ch.base[inner] = C["grass_light"]
+            veg[inner & (rnd < 0.92)] = V["crops"]
+            veg[inner & (rnd >= 0.92)] = V["crops2"]
+            margin = farm_mask & ~inner
+            ch.base[margin] = C["grass_medium"]
+            veg[margin & (rnd < 0.5)] = V["tall_grass"]
         covered |= scrub | wet | meadow | orchard | farm_mask
 
         # parks, gardens, golf, cemeteries: open grass with scattered trees
         park = area_mask(lambda f: f.tag("leisure") in ("park", "garden", "golf_course", "recreation_ground", "nature_reserve") or f.tag("landuse") == "cemetery")
-        veg[park & (rnd < vcfg["park_tree_chance"])] = V["forest_light"]
-        veg[park & (rnd >= vcfg["park_tree_chance"]) & (rnd < vcfg["park_tree_chance"] + 0.01)] = V["bushes"]
-        veg[park & (rnd > 0.996)] = V["flowers"]
+        veg[park & (nf > 0.6)] = V["park_scatter"]
+        veg[park & (nf <= 0.6) & (rnd < vcfg["park_tree_chance"])] = V["forest_light"]
+        veg[park & (nf <= 0.6) & (rnd >= vcfg["park_tree_chance"]) & (rnd < vcfg["park_tree_chance"] + 0.01)] = V["bushes_sparse"]
+        veg[park & (rnd > 0.994)] = V["flowers"]
         covered |= park
 
         # built-up land: yards with the odd tree, bush and hedge
@@ -384,8 +391,9 @@ class World:
         veg[wild_mid & ~conif & (rnd < 0.8)] = V["forest"]
         veg[wild_mid & (rnd >= 0.8)] = V["bushes"]
         veg[wild_open & (rnd < 0.25)] = V["forest_light"]
-        veg[wild_open & (rnd >= 0.25) & (rnd < 0.45)] = V["bushes"]
-        veg[wild_open & (rnd >= 0.45) & (rnd < 0.75)] = V["tall_grass"]
+        veg[wild_open & (rnd >= 0.25) & (rnd < 0.40)] = V["shrubland"]
+        veg[wild_open & (rnd >= 0.40) & (rnd < 0.50)] = V["fir_sparse"]
+        veg[wild_open & (rnd >= 0.50) & (rnd < 0.75)] = V["tall_grass"]
         surfaced = water_mask | rail_mask | sidewalk_mask | road_mask | hard_mask
         ch.base[(wild_dense | wild_mid) & ~surfaced] = C["grass_dark"]
 
