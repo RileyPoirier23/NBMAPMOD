@@ -93,7 +93,7 @@ PBF_URL = "https://download.geofabrik.de/north-america/canada/new-brunswick-late
 def _download_pbf(path: Path) -> Path:
     import requests
 
-    if path.exists() and path.stat().st_size > 1_000_000:
+    if path.exists() and path.stat().st_size > 0:
         print(f"[fetch] using cached {path}")
         return path
     path.parent.mkdir(parents=True, exist_ok=True)
