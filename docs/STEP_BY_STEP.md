@@ -35,11 +35,15 @@ Should end with `ok: 19 buildings, 23 cells`.
 
 ```bat
 cd tools
-python -m nbmap fetch
+pip install osmium
+python -m nbmap fetch --geofabrik
 ```
-Downloads every area (Moncton, Shediac, Salisbury, Petitcodiac, Havelock, the Fundy coast and
-the highway corridors) into `tools\data\osm\`. Overpass sometimes says "busy"; the script
-retries on mirrors. Re-run if a file is missing; existing files are skipped.
+Downloads the whole New Brunswick extract once (about 60 MB) from Geofabrik and filters every
+area out of it locally into `tools\data\osm\`. This is the reliable route.
+
+Alternative without the extra package: `python -m nbmap fetch` queries the Overpass API tile by
+tile. Overpass answers "504 busy" when it is overloaded; the script retries, but if it keeps
+failing use the Geofabrik route above. Existing files are skipped on re-runs.
 
 ## 5. Furniture library (2 min, do this before the big build)
 

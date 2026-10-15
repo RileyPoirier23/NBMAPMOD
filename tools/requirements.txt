@@ -3,3 +3,4 @@ pyproj>=3.6
 numpy>=1.26
 Pillow>=10.0
 requests>=2.31
+osmium>=3.6 ; python_version >= '3.9'
