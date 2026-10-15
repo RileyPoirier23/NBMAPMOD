@@ -11,10 +11,12 @@ import sys
 from pathlib import Path
 
 
-def _load(osm_dir: Path):
+def _load(osm_dir: Path, areas: list[str] | None = None):
     from . import osm
 
     files = sorted(osm_dir.glob("*.json"))
+    if areas:
+        files = [f for f in files if f.stem in areas]
     if not files:
         raise SystemExit(f"no OSM json in {osm_dir}; run `python -m nbmap fetch` first")
     print(f"[load] {len(files)} OSM files: {', '.join(f.stem for f in files)}")
@@ -34,17 +36,18 @@ def build(argv: list[str]) -> None:
     p.add_argument("--skip-render", action="store_true", help="reuse existing bmp/ and world.json")
     p.add_argument("--no-zombie-map", action="store_true")
     p.add_argument("--chunk", action="append", help="only render chunk kx,ky (repeatable, for previews)")
+    p.add_argument("--area", action="append", help="only load these area files, e.g. --area moncton (repeatable)")
     a = p.parse_args(argv)
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    data = _load(Path(a.osm))
+    data = _load(Path(a.osm), a.area)
     w = render.World(data, out)
     print(f"[build] {len(w.active)} active cells, {len(w.chunks())} chunks of {render.CHUNK_CELLS}x{render.CHUNK_CELLS} cells")
+    only = {tuple(int(v) for v in c.split(",")) for c in a.chunk} if a.chunk else None
     if not a.skip_render:
-        only = {tuple(int(v) for v in c.split(",")) for c in a.chunk} if a.chunk else None
         chunks = w.render_all(only)
         render.write_world_json(out, w, chunks)
-    buildings.generate(data, out)
+    buildings.generate(data, out, only_chunks=only)
     zones.generate(data, out, zombie_map=not a.no_zombie_map)
     pois.generate(data, out)
     worldmap.generate(data, out)

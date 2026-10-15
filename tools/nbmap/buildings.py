@@ -17,6 +17,7 @@ import hashlib
 import json
 import math
 import random
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from xml.sax.saxutils import quoteattr
@@ -340,7 +341,7 @@ class TbxWriter:
         return "\n".join(out) + "\n"
 
 
-def generate(data: OSMData, out: Path) -> list[Building]:
+def generate(data: OSMData, out: Path, only_chunks: set[tuple[int, int]] | None = None) -> list[Building]:
     rng = random.Random(config.BUILDINGS["seed"])
     themes = load_themes()
     furniture = furnish.load()
@@ -353,12 +354,16 @@ def generate(data: OSMData, out: Path) -> list[Building]:
     bdir.mkdir(parents=True, exist_ok=True)
     built: list[Building] = []
     seen = set()
-    for f in data.features:
-        if "building" not in f.tags or not polygons(f.geom):
-            continue
+    candidates = [f for f in data.features if "building" in f.tags and polygons(f.geom) and f.geom.area >= 2]
+    if only_chunks:
+        from .config import CHUNK_CELLS
+        candidates = [f for f in candidates if (int(f.bounds[0] // (CELL * CHUNK_CELLS)), int(f.bounds[1] // (CELL * CHUNK_CELLS))) in only_chunks]
+    print(f"[buildings] {len(candidates)} footprints to build")
+    t0 = time.time()
+    for i, f in enumerate(candidates, 1):
+        if i % 500 == 0:
+            print(f"[buildings] {i}/{len(candidates)} ({time.time() - t0:.0f}s)")
         poly = f.geom
-        if poly.area < 2:
-            continue
         key, spec = classify(f)
         ox, oy, mask = _footprint_mask(poly)
         b = Building(f.osm_id, f.tag("name", ""), spec["theme"], list(spec["rooms"]), ox, oy, mask.shape[1], mask.shape[0],

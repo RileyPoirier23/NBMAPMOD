@@ -166,21 +166,37 @@ class World:
         self.active = self._active_cells()
 
     # ------------------------------------------------------------------ cells
+    MAJOR = {"motorway", "motorway_link", "trunk", "trunk_link", "primary", "primary_link", "secondary", "secondary_link", "tertiary", "tertiary_link"}
+
     def _active_cells(self) -> set[tuple[int, int]]:
-        cells: set[tuple[int, int]] = set()
+        """Cells worth generating: every cell with a building (plus a halo), every cell a
+        numbered highway runs through, and minor roads only where they pass near buildings."""
+        def cells_of(f):
+            x0, y0, x1, y1 = f.bounds
+            for cx in range(int(x0 // CELL), int(x1 // CELL) + 1):
+                for cy in range(int(y0 // CELL), int(y1 // CELL) + 1):
+                    yield cx, cy
+
+        building_cells: set[tuple[int, int]] = set()
+        major_cells: set[tuple[int, int]] = set()
+        minor_cells: set[tuple[int, int]] = set()
         for f in self.feats:
             hw = f.tag("highway")
-            if "building" in f.tags or (hw and hw in config.ROADS and hw not in ("path", "footway", "steps", "bridleway", "cycleway")):
-                x0, y0, x1, y1 = f.bounds
-                for cx in range(int(x0 // CELL), int(x1 // CELL) + 1):
-                    for cy in range(int(y0 // CELL), int(y1 // CELL) + 1):
-                        cells.add((cx, cy))
+            if "building" in f.tags:
+                building_cells.update(cells_of(f))
+            elif hw in self.MAJOR:
+                major_cells.update(cells_of(f))
+            elif hw in ("residential", "unclassified", "living_street", "service"):
+                minor_cells.update(cells_of(f))
         halo = max(a.halo_cells for a in config.AREAS)
-        out = set(cells)
-        for cx, cy in cells:
+        out = set(major_cells)
+        for cx, cy in building_cells:
             for dx in range(-halo, halo + 1):
                 for dy in range(-halo, halo + 1):
                     out.add((cx + dx, cy + dy))
+        # minor roads count only within one cell of a building
+        near = {(cx + dx, cy + dy) for cx, cy in building_cells for dx in (-1, 0, 1) for dy in (-1, 0, 1)}
+        out |= minor_cells & near
         return {c for c in out if c[0] >= 0 and c[1] >= 0}
 
     def chunks(self) -> list[tuple[int, int]]:

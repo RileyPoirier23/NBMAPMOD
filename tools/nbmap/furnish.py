@@ -198,7 +198,18 @@ class Furnisher:
         self.catalog: list[dict] = []          # unique pieces, index = FurnitureTiles - 1
         self._index: dict[str, int] = {}
 
+    _pieces_cache: dict[tuple[int, str], list[dict]] = {}
+
     def _pieces(self, pattern: str) -> list[dict]:
+        key = (id(self.groups), pattern)
+        hit = Furnisher._pieces_cache.get(key)
+        if hit is not None:
+            return hit
+        out = self._pieces_uncached(pattern)
+        Furnisher._pieces_cache[key] = out
+        return out
+
+    def _pieces_uncached(self, pattern: str) -> list[dict]:
         rx = re.compile(pattern, re.I)
         out = []
         for label, pieces in self.groups.items():
