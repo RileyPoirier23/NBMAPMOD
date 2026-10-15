@@ -1,0 +1,3 @@
+Rules.txt, Blends.txt and MapBaseXML.txt are the default WorldEd configuration files from
+Tim Baker's pzworlded (https://github.com/timbaker/pzworlded, GPL v2 or later), with the
+rules in Rules_nb_extra.txt appended by the generator for New Brunswick-specific vegetation.

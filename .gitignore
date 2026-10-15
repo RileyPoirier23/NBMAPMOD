@@ -1,5 +1,5 @@
 # OSM downloads and generated map data are large; rebuild them with `python -m nbmap all`
-data/
+/data/
 build/
 tools/build/
 tools/data/

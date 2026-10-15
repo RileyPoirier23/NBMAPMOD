@@ -1,0 +1,4 @@
+{
+  "_comment": "Optional furniture placed per room InternalName. Each entry: tile sheet name for the W-facing and N-facing orientation, footprint in tiles. Empty list = empty room. Add verified vanilla tiles from BuildingEd's furniture palette here and rebuild.",
+  "rooms": {}
+}

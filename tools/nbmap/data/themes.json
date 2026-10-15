@@ -1,0 +1,27 @@
+{
+  "_comment": "BuildingEd tile sets per theme. Tile names are vanilla B41 sheets; open one generated .tbx in BuildingEd and fix any tile shown as missing here, every building picks it up on the next build.",
+  "house": {
+    "exterior_walls": "walls_exterior_house_01_0",
+    "interior_walls": "walls_interior_house_01_0",
+    "doors": "fixtures_doors_01_0",
+    "door_frames": "fixtures_doors_frames_01_0",
+    "windows": "fixtures_windows_01_0",
+    "curtains": "fixtures_windows_curtains_01_0",
+    "stairs": "fixtures_stairs_01_0",
+    "roof_tops": "roofs_01_0",
+    "floor": "floors_interior_tilesandwood_01_42"
+  },
+  "apartment": {"like": "house", "exterior_walls": "walls_exterior_house_01_8", "floor": "floors_interior_carpet_01_0"},
+  "cabin":     {"like": "house", "exterior_walls": "walls_exterior_wooden_01_0", "interior_walls": "walls_interior_wooden_01_0"},
+  "trailer":   {"like": "house", "exterior_walls": "walls_exterior_house_01_24"},
+  "garage":    {"like": "house", "exterior_walls": "walls_exterior_house_01_0", "floor": "floors_exterior_street_01_0", "doors": "fixtures_doors_01_0"},
+  "shed":      {"like": "cabin", "floor": "floors_exterior_natural_01_0"},
+  "barn":      {"like": "cabin", "floor": "floors_exterior_natural_01_0"},
+  "industrial":{"like": "house", "exterior_walls": "walls_exterior_roofs_01_0", "interior_walls": "walls_interior_house_01_16", "floor": "floors_interior_tilesandwood_01_0", "windows": "fixtures_windows_01_0"},
+  "commercial":{"like": "house", "exterior_walls": "walls_commercial_01_0", "interior_walls": "walls_interior_house_01_8", "floor": "floors_interior_tilesandwood_01_8"},
+  "office":    {"like": "commercial", "floor": "floors_interior_carpet_01_8"},
+  "school":    {"like": "commercial", "floor": "floors_interior_tilesandwood_01_16"},
+  "medical":   {"like": "commercial", "floor": "floors_interior_tilesandwood_01_24"},
+  "church":    {"like": "house", "exterior_walls": "walls_exterior_house_01_16", "floor": "floors_interior_tilesandwood_01_42"},
+  "hotel":     {"like": "apartment"}
+}

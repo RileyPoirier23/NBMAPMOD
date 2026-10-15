@@ -1,0 +1,178 @@
+
+# ---------------------------------------------------------------------------------------
+# New Brunswick extras (appended by nbmap). Colours below are only produced by nbmap's
+# vegetation images; every other colour follows the default WorldEd rules above.
+# ---------------------------------------------------------------------------------------
+
+rule
+{
+    label = NB Softwood stand, dense (spruce/fir) + dark grass
+    bitmap = 1
+    color = 255 64 0
+    tiles = [
+        vegetation_trees_01_8
+        vegetation_trees_01_9
+        vegetation_trees_01_8
+        vegetation_trees_01_9
+        vegetation_trees_01_9
+        darklonggrass
+    ]
+    layer = 0_Vegetation
+    condition = 90 100 35
+}
+rule
+{
+    label = NB Softwood stand, dense + medium grass
+    bitmap = 1
+    color = 255 64 0
+    tiles = [
+        vegetation_trees_01_8
+        vegetation_trees_01_9
+        vegetation_trees_01_8
+        vegetation_trees_01_9
+        vegetation_trees_01_9
+        medlonggrass
+    ]
+    layer = 0_Vegetation
+    condition = 117 117 47
+}
+rule
+{
+    label = NB Softwood stand + dark grass
+    bitmap = 1
+    color = 200 64 0
+    tiles = [
+        vegetation_trees_01_8
+        vegetation_trees_01_9
+        vegetation_trees_01_9
+        darklonggrass
+        darklonggrass
+        darkmedgrass
+        vegetation_foliage_01_12
+    ]
+    layer = 0_Vegetation
+    condition = 90 100 35
+}
+rule
+{
+    label = NB Softwood stand + medium grass
+    bitmap = 1
+    color = 200 64 0
+    tiles = [
+        vegetation_trees_01_8
+        vegetation_trees_01_9
+        vegetation_trees_01_9
+        medlonggrass
+        medlonggrass
+        medmedgrass
+        vegetation_foliage_01_12
+    ]
+    layer = 0_Vegetation
+    condition = 117 117 47
+}
+rule
+{
+    label = NB Salt marsh / tidal reeds (on dirt-grass)
+    bitmap = 1
+    color = 0 160 160
+    tiles = [
+        vegetation_groundcover_01_18
+        vegetation_groundcover_01_19
+        vegetation_groundcover_01_21
+        vegetation_groundcover_01_22
+        vegetation_groundcover_01_23
+        darklonggrass
+        darklonggrass
+    ]
+    layer = 0_Vegetation
+    condition = 80 55 20
+}
+rule
+{
+    label = NB Marsh reeds on dark grass
+    bitmap = 1
+    color = 0 160 160
+    tiles = [
+        vegetation_groundcover_01_18
+        vegetation_groundcover_01_19
+        vegetation_groundcover_01_21
+        vegetation_groundcover_01_22
+        vegetation_groundcover_01_23
+        darklonggrass
+        darklonggrass
+    ]
+    layer = 0_Vegetation
+    condition = 90 100 35
+}
+rule
+{
+    label = NB Wildflower meadow (light grass)
+    bitmap = 1
+    color = 255 128 255
+    tiles = [
+        vegetation_groundcover_01_18
+        vegetation_groundcover_01_19
+        vegetation_groundcover_01_21
+        lightlonggrass
+        lightmedgrass
+    ]
+    layer = 0_Vegetation
+    condition = 145 135 60
+}
+rule
+{
+    label = NB Wildflower meadow (medium grass)
+    bitmap = 1
+    color = 255 128 255
+    tiles = [
+        vegetation_groundcover_01_18
+        vegetation_groundcover_01_19
+        vegetation_groundcover_01_21
+        medlonggrass
+        medmedgrass
+    ]
+    layer = 0_Vegetation
+    condition = 117 117 47
+}
+rule
+{
+    label = NB Hedge (dark grass)
+    bitmap = 1
+    color = 0 80 0
+    tiles = [
+        vegetation_foliage_01_8
+        vegetation_foliage_01_9
+        vegetation_foliage_01_10
+        vegetation_foliage_01_11
+    ]
+    layer = 0_Vegetation
+    condition = 90 100 35
+}
+rule
+{
+    label = NB Hedge (medium grass)
+    bitmap = 1
+    color = 0 80 0
+    tiles = [
+        vegetation_foliage_01_8
+        vegetation_foliage_01_9
+        vegetation_foliage_01_10
+        vegetation_foliage_01_11
+    ]
+    layer = 0_Vegetation
+    condition = 117 117 47
+}
+rule
+{
+    label = NB Hedge (light grass)
+    bitmap = 1
+    color = 0 80 0
+    tiles = [
+        vegetation_foliage_01_8
+        vegetation_foliage_01_9
+        vegetation_foliage_01_10
+        vegetation_foliage_01_11
+    ]
+    layer = 0_Vegetation
+    condition = 145 135 60
+}
